@@ -1,0 +1,5 @@
+-- Ocean View Resort Reservation System
+-- Database Script
+-- Author: Avinash
+-- Description: Tables, stored procedures, and triggers for the reservation system
+-- Date: 2026
