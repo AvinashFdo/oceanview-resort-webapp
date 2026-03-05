@@ -81,8 +81,9 @@
   <p>Select an option below:</p>
 
   <div class="menu">
-    <a href="#">Add Reservation</a>
-    <a href="#">View Reservations</a>
+    <a href="<%= request.getContextPath() %>/reservations/add">Add Reservation</a>
+    <a href="<%= request.getContextPath() %>/viewReservation">View Reservation Details</a>
+    <a href="<%= request.getContextPath() %>/payments/add">Add Payment / Print Bill</a>
     <a href="#">Reports</a>
     <a href="#">Help</a>
   </div>
