@@ -13,8 +13,8 @@ public class ReservationSummary {
     private Date checkIn;
     private Date checkOut;
 
-    // "COMPLETED" or "PENDING"
     private String paymentStatus;
+    private String reservationStatus; // ACTIVE / CANCELLED
 
     public ReservationSummary() {}
 
@@ -38,4 +38,7 @@ public class ReservationSummary {
 
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public String getReservationStatus() { return reservationStatus; }
+    public void setReservationStatus(String reservationStatus) { this.reservationStatus = reservationStatus; }
 }

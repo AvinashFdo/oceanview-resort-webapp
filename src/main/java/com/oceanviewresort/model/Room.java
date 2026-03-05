@@ -8,6 +8,7 @@ public class Room {
     private String roomNumber;
     private String roomType;
     private BigDecimal pricePerNight;
+    private String status;
 
     public Room() {}
 
@@ -42,4 +43,7 @@ public class Room {
     public void setPricePerNight(BigDecimal pricePerNight) {
         this.pricePerNight = pricePerNight;
     }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

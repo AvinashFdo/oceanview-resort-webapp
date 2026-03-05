@@ -15,8 +15,8 @@ public class RoomDAO {
 
         List<Room> rooms = new ArrayList<>();
 
-        String sql = "SELECT room_id, room_number, room_type, price_per_night " +
-                "FROM rooms WHERE status = 'AVAILABLE' ORDER BY room_number";
+        String sql = "SELECT room_id, room_number, room_type, price_per_night, status " +
+                "FROM rooms ORDER BY room_number";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -29,6 +29,7 @@ public class RoomDAO {
                 r.setRoomNumber(rs.getString("room_number"));
                 r.setRoomType(rs.getString("room_type"));
                 r.setPricePerNight(rs.getBigDecimal("price_per_night"));
+                r.setStatus(rs.getString("status"));
                 rooms.add(r);
             }
 

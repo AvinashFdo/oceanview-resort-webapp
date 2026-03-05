@@ -3,6 +3,8 @@ package com.oceanviewresort.service;
 import com.oceanviewresort.dao.ReservationDAO;
 import com.oceanviewresort.model.Reservation;
 import com.oceanviewresort.model.ReservationDetails;
+import com.oceanviewresort.dao.PaymentDAO;
+import com.oceanviewresort.model.ReservationDetails;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -11,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 public class ReservationService {
 
     private final ReservationDAO reservationDAO = new ReservationDAO();
+    private final PaymentDAO paymentDAO = new PaymentDAO();
 
     public String createReservation(Reservation r) {
 
@@ -73,6 +76,39 @@ public class ReservationService {
         } catch (Exception ex) {
             // In service layer, return null; servlet will decide what message to show
             return null;
+        }
+    }
+
+    public String cancelReservation(String reservationNo) {
+
+        if (reservationNo == null || reservationNo.trim().isEmpty()) {
+            return "ERROR: Reservation number is required.";
+        }
+
+        reservationNo = reservationNo.trim().toUpperCase();
+        if (!reservationNo.matches("^R\\d{4}$")) {
+            return "ERROR: Invalid reservation number format.";
+        }
+
+        try {
+            // Load billing details so we can get resId (and also confirm it exists)
+            ReservationDetails billing = reservationDAO.findBillingDetailsByReservationNo(reservationNo);
+            if (billing == null) {
+                return "ERROR: Reservation not found.";
+            }
+
+            // Prevent cancel if already paid (simple rule for assignment)
+            if (paymentDAO.paymentExistsForReservation(billing.getResId())) {
+                return "ERROR: Cannot cancel. Payment already completed for this reservation.";
+            }
+
+            boolean ok = reservationDAO.cancelReservationByNo(reservationNo);
+            return ok ? "OK" : "ERROR: Reservation is already cancelled or cannot be cancelled.";
+
+        } catch (Exception ex) {
+            String msg = ex.getMessage();
+            if (msg == null || msg.trim().isEmpty()) return "ERROR: Failed to cancel reservation.";
+            return "ERROR: " + msg;
         }
     }
 }

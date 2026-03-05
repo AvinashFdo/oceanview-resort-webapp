@@ -64,45 +64,114 @@
 
     <form method="post" action="<%= request.getContextPath() %>/reservations/add" onsubmit="return validateForm();">
 
-        <div class="row">
-
+        <!-- Filters -->
+        <div class="row" style="margin-top:10px;">
             <div class="col">
-                <label>Contact Number</label>
-                <input type="text" id="contactNo" name="contactNo" placeholder="07XXXXXXXX">
+                <label>Filter by Type</label>
+                <select id="filterType" onchange="applyFilters()">
+                    <option value="ALL">ALL</option>
+                    <option value="STANDARD">STANDARD</option>
+                    <option value="DELUXE">DELUXE</option>
+                    <option value="SUITE">SUITE</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Filter by Status</label>
+                <select id="filterStatus" onchange="applyFilters()">
+                    <option value="ALL">ALL</option>
+                    <option value="AVAILABLE">AVAILABLE</option>
+                    <option value="MAINTENANCE">MAINTENANCE</option>
+                </select>
             </div>
         </div>
 
-        <label>Guest Name</label>
-        <input type="text" id="guestName" name="guestName" placeholder="Guest full name">
+        <label style="margin-top:14px;">Select a Room</label>
 
-        <label>Address</label>
-        <textarea id="address" name="address" placeholder="Guest address"></textarea>
-
-        <label>Select Room</label>
-        <select id="roomId" name="roomId">
-            <option value="">-- Select --</option>
+        <!-- Room Cards -->
+        <div id="roomGrid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
             <% if (rooms != null) {
-                for (Room r : rooms) { %>
-            <option value="<%= r.getRoomId() %>">
-                Room <%= r.getRoomNumber() %> - <%= r.getRoomType() %> (USD <%= r.getPricePerNight() %>/night)
-            </option>
-            <%  }
-            } %>
-        </select>
-
-        <div class="row">
-            <div class="col">
-                <label>Check-in Date</label>
-                <input type="date" id="checkIn" name="checkIn">
+                for (Room r : rooms) {
+                    String st = r.getStatus();
+            %>
+            <div class="room-card"
+                 data-room-id="<%= r.getRoomId() %>"
+                 data-room-number="<%= r.getRoomNumber() %>"
+                 data-room-type="<%= r.getRoomType() %>"
+                 data-price="<%= r.getPricePerNight() %>"
+                 data-status="<%= st %>"
+                 onclick="selectRoom(this)"
+                 style="
+                         border:1px solid #cbd5e1;
+                         border-radius:12px;
+                         padding:12px;
+                         cursor:pointer;
+                         background:<%= "MAINTENANCE".equalsIgnoreCase(st) ? "#f8fafc" : "#ffffff" %>;
+                         opacity:<%= "MAINTENANCE".equalsIgnoreCase(st) ? "0.6" : "1" %>;
+                         ">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>Room <%= r.getRoomNumber() %></strong>
+                    <span style="font-weight:800; font-size:12px;">
+                    <%= st %>
+                </span>
+                </div>
+                <div style="margin-top:6px;">Type: <strong><%= r.getRoomType() %></strong></div>
+                <div style="margin-top:6px;">Price: <strong>USD <%= r.getPricePerNight() %></strong> / night</div>
+                <% if ("MAINTENANCE".equalsIgnoreCase(st)) { %>
+                <div style="margin-top:8px; color:#991b1b; font-weight:700;">Not bookable</div>
+                <% } else { %>
+                <div style="margin-top:8px; color:#166534; font-weight:700;">Click to book</div>
+                <% } %>
             </div>
-            <div class="col">
-                <label>Check-out Date</label>
-                <input type="date" id="checkOut" name="checkOut">
-            </div>
+            <% }} %>
         </div>
 
-        <div class="actions">
-            <button class="btn primary" type="submit">Create Reservation</button>
+        <!-- Hidden selected roomId (this replaces the <select>) -->
+        <input type="hidden" id="roomId" name="roomId" value="">
+
+        <!-- Side Drawer -->
+        <div id="drawerOverlay"
+             onclick="closeDrawer()"
+             style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);"></div>
+
+        <div id="drawer"
+             style="position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100vh;
+                background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,.15);
+                transition:right .25s ease; padding:16px; overflow:auto; z-index:9999;">
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">Create Reservation</h3>
+                <button type="button" class="btn secondary" onclick="closeDrawer()">Close</button>
+            </div>
+
+            <div class="msg success" id="selectedRoomBox" style="display:none; margin-top:12px;"></div>
+
+            <label style="margin-top:12px;">Contact Number</label>
+            <input type="text" id="contactNo" name="contactNo" placeholder="07XXXXXXXX">
+
+            <label>Guest Name</label>
+            <input type="text" id="guestName" name="guestName" placeholder="Guest full name">
+
+            <label>Address</label>
+            <textarea id="address" name="address" placeholder="Guest address"></textarea>
+
+            <div class="row">
+                <div class="col">
+                    <label>Check-in Date</label>
+                    <input type="date" id="checkIn" name="checkIn">
+                </div>
+                <div class="col">
+                    <label>Check-out Date</label>
+                    <input type="date" id="checkOut" name="checkOut">
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" type="submit">Create Reservation</button>
+            </div>
+
+            <p style="color:#64748b; font-size:12px; margin-top:10px;">
+                Note: Date availability is validated by the system. If a room is already reserved for selected dates, you’ll get a conflict message.
+            </p>
         </div>
 
     </form>
@@ -110,11 +179,62 @@
 </div>
 
 <script>
+
+    function openDrawer() {
+        document.getElementById("drawerOverlay").style.display = "block";
+        document.getElementById("drawer").style.right = "0";
+    }
+
+    function closeDrawer() {
+        document.getElementById("drawerOverlay").style.display = "none";
+        document.getElementById("drawer").style.right = "-420px";
+    }
+
+    function selectRoom(card) {
+        const status = (card.dataset.status || "").toUpperCase();
+        if (status === "MAINTENANCE") {
+            alert("This room is under maintenance and cannot be booked.");
+            return;
+        }
+
+        const roomId = card.dataset.roomId;
+        const roomNumber = card.dataset.roomNumber;
+        const roomType = card.dataset.roomType;
+        const price = card.dataset.price;
+
+        document.getElementById("roomId").value = roomId;
+
+        const box = document.getElementById("selectedRoomBox");
+        box.style.display = "block";
+        box.innerHTML = "Selected: <strong>Room " + roomNumber + "</strong> (" + roomType + ") — USD " + price + " / night";
+
+        openDrawer();
+    }
+
+    function applyFilters() {
+        const t = document.getElementById("filterType").value;
+        const s = document.getElementById("filterStatus").value;
+
+        document.querySelectorAll(".room-card").forEach(card => {
+            const ct = (card.dataset.roomType || "").toUpperCase();
+            const cs = (card.dataset.status || "").toUpperCase();
+
+            const typeOk = (t === "ALL") || (ct === t);
+            const statusOk = (s === "ALL") || (cs === s);
+
+            card.style.display = (typeOk && statusOk) ? "block" : "none";
+        });
+    }
+
     function validateForm() {
         const guest = document.getElementById("guestName").value.trim();
         const addr = document.getElementById("address").value.trim();
         const contact = document.getElementById("contactNo").value.trim();
         const roomId = document.getElementById("roomId").value;
+        if (roomId === "") {
+            alert("Please select a room.");
+            return false;
+        }
         const inDate = document.getElementById("checkIn").value;
         const outDate = document.getElementById("checkOut").value;
 
@@ -144,6 +264,8 @@
         }
         return true;
     }
+
+
 </script>
 
 </body>
