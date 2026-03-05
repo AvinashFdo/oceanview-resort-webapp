@@ -30,6 +30,19 @@ public class ViewReservationServlet extends HttpServlet {
             return;
         }
 
+        String reservationNo = req.getParameter("reservationNo");
+
+        if (reservationNo != null && !reservationNo.trim().isEmpty()) {
+
+            ReservationDetails details = reservationService.getReservationDetails(reservationNo);
+
+            if (details == null) {
+                req.setAttribute("error", "No reservation found for: " + reservationNo.trim().toUpperCase());
+            } else {
+                req.setAttribute("details", details);
+            }
+        }
+
         req.getRequestDispatcher("/pages/viewReservation.jsp").forward(req, resp);
     }
 
