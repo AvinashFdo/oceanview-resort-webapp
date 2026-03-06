@@ -24,7 +24,7 @@
 
     <header class="site-header">
         <div class="site-header-inner">
-            <div class="brand">Ocean View Resort System</div>
+            <div class="brand">Ocean View Resort</div>
         </div>
     </header>
 

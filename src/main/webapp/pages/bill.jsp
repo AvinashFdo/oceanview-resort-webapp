@@ -38,7 +38,7 @@
 
     <header class="site-header no-print">
         <div class="site-header-inner">
-            <div class="brand">Ocean View Resort System</div>
+            <div class="brand">Ocean View Resort</div>
             <div class="header-right">
                 <a class="header-link" href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
                 <a class="header-link" href="<%= request.getContextPath() %>/payments/add">Add Payment</a>

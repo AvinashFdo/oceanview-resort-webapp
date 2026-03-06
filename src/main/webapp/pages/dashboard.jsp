@@ -24,7 +24,7 @@
 
   <header class="site-header">
     <div class="site-header-inner">
-      <div class="brand">Ocean View Resort System</div>
+      <div class="brand">Ocean View Resort</div>
       <div class="header-right">
         <span>Welcome, <strong><%= username %></strong></span>
         <span class="role-badge"><%= role %></span>
@@ -86,6 +86,11 @@
       <a class="menu-card" href="<%= request.getContextPath() %>/users/create">
         <div class="menu-card-title">Create Receptionist User</div>
         <div class="menu-card-text">Add and manage receptionist access.</div>
+      </a>
+
+      <a class="menu-card" href="<%= request.getContextPath() %>/rooms/manage">
+        <div class="menu-card-title">Manage Rooms</div>
+        <div class="menu-card-text">Update room status to available or maintenance.</div>
       </a>
       <% } %>
     </div>
