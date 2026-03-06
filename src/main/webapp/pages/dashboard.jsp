@@ -64,7 +64,7 @@
     </div>
     <% } %>
 
-    <div class="section-title">Functions</div>
+    <div class="section-title">Quick Actions</div>
 
     <div class="menu-grid">
       <a class="menu-card" href="<%= request.getContextPath() %>/reservations/add">
@@ -93,6 +93,48 @@
         <div class="menu-card-text">Update room status to available or maintenance.</div>
       </a>
       <% } %>
+    </div>
+
+    <div class="section-title">Help / User Guide</div>
+
+    <div class="card">
+      <p>
+        This reservation system helps staff manage guest bookings, payments, and room availability at Ocean View Resort.
+        New staff members should review the following guidelines before using the system.
+      </p>
+
+      <ol style="margin-top:12px; line-height:1.6; padding-left:20px;">
+
+        <li>
+          <strong>Add Reservation</strong> – Use this option to create a new reservation by entering guest information,
+          selecting a room, and specifying check-in and check-out dates.
+        </li>
+
+        <li>
+          <strong>View Reservations</strong> – Allows staff to search and review all reservation records including
+          guest details, booking dates, and reservation status.
+        </li>
+
+        <li>
+          <strong>Add Payment / Print Bill</strong> – Record payments for completed stays and generate a printable
+          bill for the guest.
+        </li>
+
+        <% if (isAdmin) { %>
+        <li>
+          <strong>Create Receptionist User</strong> – Administrators can create login accounts for receptionist staff.
+        </li>
+
+        <li>
+          <strong>Manage Rooms</strong> – Administrators can update room status such as Available or Maintenance.
+        </li>
+        <% } %>
+
+        <li>
+          <strong>Logout</strong> – Always logout after completing work to keep the system secure.
+        </li>
+
+      </ol>
     </div>
   </main>
 

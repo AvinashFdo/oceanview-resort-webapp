@@ -673,6 +673,20 @@ button:hover,
     margin-top: 10px;
 }
 
+.section-title {
+    margin-top: 24px;
+}
+
+.card ol {
+    margin-top: 14px;
+    padding-left: 20px;
+    line-height: 1.8;
+}
+
+.card li {
+    margin-bottom: 8px;
+}
+
 @media (max-width: 1100px) {
     .summary-grid {
         grid-template-columns: 1fr;
