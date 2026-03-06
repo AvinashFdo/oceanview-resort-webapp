@@ -1,23 +1,29 @@
 package com.oceanviewresort.service;
 
 import com.oceanviewresort.dao.ReservationDAO;
-import com.oceanviewresort.model.Reservation;
-import com.oceanviewresort.model.ReservationDetails;
 import com.oceanviewresort.dao.PaymentDAO;
+import com.oceanviewresort.model.Reservation;
 import com.oceanviewresort.model.ReservationDetails;
 
 import java.time.LocalDate;
-import java.util.Optional;
-import java.time.temporal.ChronoUnit;
 
 public class ReservationService {
 
-    private final ReservationDAO reservationDAO = new ReservationDAO();
-    private final PaymentDAO paymentDAO = new PaymentDAO();
+    private final ReservationDAO reservationDAO;
+    private final PaymentDAO paymentDAO;
+
+    public ReservationService() {
+        this.reservationDAO = new ReservationDAO();
+        this.paymentDAO = new PaymentDAO();
+    }
+
+    public ReservationService(ReservationDAO reservationDAO, PaymentDAO paymentDAO) {
+        this.reservationDAO = reservationDAO;
+        this.paymentDAO = paymentDAO;
+    }
 
     public String createReservation(Reservation r) {
 
-        // Server-side validation
         if (r.getGuestName() == null || r.getGuestName().trim().isEmpty()) {
             return "Guest name is required.";
         }
@@ -45,10 +51,9 @@ public class ReservationService {
             return "Check-out date must be after check-in date.";
         }
 
-        // Call stored procedure through DAO
         try {
             String newResNo = reservationDAO.createUsingStoredProcedure(r);
-            return newResNo; // success: return reservation number
+            return newResNo;
         } catch (Exception ex) {
             String msg = ex.getMessage();
             if (msg == null || msg.trim().isEmpty()) {
@@ -66,7 +71,6 @@ public class ReservationService {
 
         reservationNo = reservationNo.trim().toUpperCase();
 
-        // Basic format validation: R0001, R0002 etc.
         if (!reservationNo.matches("^R\\d{4}$")) {
             return null;
         }
@@ -74,7 +78,6 @@ public class ReservationService {
         try {
             return reservationDAO.findReservationDetailsByReservationNo(reservationNo);
         } catch (Exception ex) {
-            // In service layer, return null; servlet will decide what message to show
             return null;
         }
     }
@@ -91,13 +94,11 @@ public class ReservationService {
         }
 
         try {
-            // Load billing details so we can get resId (and also confirm it exists)
             ReservationDetails billing = reservationDAO.findBillingDetailsByReservationNo(reservationNo);
             if (billing == null) {
                 return "ERROR: Reservation not found.";
             }
 
-            // Prevent cancel if already paid (simple rule for assignment)
             if (paymentDAO.paymentExistsForReservation(billing.getResId())) {
                 return "ERROR: Cannot cancel. Payment already completed for this reservation.";
             }

@@ -7,7 +7,15 @@ import java.util.List;
 
 public class RoomService {
 
-    private final RoomDAO roomDAO = new RoomDAO();
+    private final RoomDAO roomDAO;
+
+    public RoomService() {
+        this.roomDAO = new RoomDAO();
+    }
+
+    public RoomService(RoomDAO roomDAO) {
+        this.roomDAO = roomDAO;
+    }
 
     public List<Room> getAllRooms() {
         return roomDAO.findAllActiveRooms();

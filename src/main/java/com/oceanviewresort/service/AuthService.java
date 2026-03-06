@@ -5,7 +5,15 @@ import com.oceanviewresort.model.User;
 
 public class AuthService {
 
-    private final UserDAO userDAO = new UserDAO();
+    private final UserDAO userDAO;
+
+    public AuthService() {
+        this.userDAO = new UserDAO();
+    }
+
+    public AuthService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     public User login(String username, String password) {
 
