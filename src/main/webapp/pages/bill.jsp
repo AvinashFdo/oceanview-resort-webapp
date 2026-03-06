@@ -14,64 +14,87 @@
 <html>
 <head>
     <title>Bill</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/styles.css">
     <style>
-        body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; }
-        .container { max-width: 800px; margin: 20px auto; background:white; padding: 20px; border-radius: 10px; box-shadow:0 3px 8px rgba(0,0,0,0.08); }
-        .top { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
-        .btn { padding: 8px 12px; cursor:pointer; }
-        table { width:100%; border-collapse:collapse; margin-top:12px; }
-        td { padding:8px; border-bottom:1px solid #eee; }
-        .label { font-weight:bold; width:35%; }
-        .ok { background:#e8fff1; padding:10px; border:1px solid #a8f0c6; border-radius:6px; margin-bottom:12px; }
         @media print {
-            .no-print { display:none; }
+            .no-print { display:none !important; }
             body { background:white; }
-            .container { box-shadow:none; margin:0; border-radius:0; }
+            .page { padding: 0; }
+            .card {
+                box-shadow:none;
+                border:0;
+                padding:0;
+            }
+            .site-header,
+            .site-footer {
+                display:none;
+            }
         }
     </style>
 </head>
 <body>
+<div class="app-shell">
 
-<div class="container">
-    <div class="top no-print">
-        <div>
-            <a href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
-            &nbsp;|&nbsp;
-            <a href="<%= request.getContextPath() %>/payments/add">Add Another Payment</a>
+    <header class="site-header no-print">
+        <div class="site-header-inner">
+            <div class="brand">Ocean View Resort System</div>
+            <div class="header-right">
+                <a class="header-link" href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
+                <a class="header-link" href="<%= request.getContextPath() %>/payments/add">Add Payment</a>
+                <a class="header-link" href="<%= request.getContextPath() %>/logout">Logout</a>
+            </div>
         </div>
-        <button class="btn" onclick="window.print()">Print</button>
-    </div>
+    </header>
 
-    <% if (success != null) { %>
-    <div class="ok"><%= success %></div>
-    <% } %>
+    <main class="page page-compact">
+        <div class="card">
+            <div class="actions no-print" style="justify-content:space-between; margin-bottom:16px;">
+                <div class="actions">
+                    <a class="btn btn-secondary" href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
+                    <a class="btn btn-secondary" href="<%= request.getContextPath() %>/payments/add">Add Another Payment</a>
+                </div>
+                <button class="btn btn-primary" onclick="window.print()">Print</button>
+            </div>
 
-    <h2 style="text-align:center; margin:0;">OCEAN VIEW RESORT</h2>
-    <p style="text-align:center; margin-top:6px;">Payment Receipt / Bill</p>
+            <% if (success != null) { %>
+            <div class="msg msg-success no-print"><%= success %></div>
+            <% } %>
 
-    <% if (billing == null) { %>
-    <p>No billing details found.</p>
-    <% } else { %>
+            <div style="text-align:center; margin-bottom:20px;">
+                <h1 class="page-title" style="font-size:34px; margin-bottom:6px;">OCEAN VIEW RESORT</h1>
+                <p class="page-subtitle" style="margin:0;">Payment Receipt / Bill</p>
+            </div>
 
-    <table>
-        <tr><td class="label">Reservation No</td><td><%= billing.getReservationNo() %></td></tr>
-        <tr><td class="label">Guest Name</td><td><%= billing.getGuestName() %></td></tr>
-        <tr><td class="label">Address</td><td><%= billing.getAddress() %></td></tr>
-        <tr><td class="label">Contact</td><td><%= billing.getContact() %></td></tr>
+            <% if (billing == null) { %>
+            <div class="empty-state">No billing details found.</div>
+            <% } else { %>
+            <div class="details-card">
+                <table class="details-table">
+                    <tr><td class="details-label">Reservation No</td><td class="details-value"><%= billing.getReservationNo() %></td></tr>
+                    <tr><td class="details-label">Guest Name</td><td class="details-value"><%= billing.getGuestName() %></td></tr>
+                    <tr><td class="details-label">Address</td><td class="details-value"><%= billing.getAddress() %></td></tr>
+                    <tr><td class="details-label">Contact</td><td class="details-value"><%= billing.getContact() %></td></tr>
+                    <tr><td class="details-label">Room</td><td class="details-value"><%= billing.getRoomNo() %> (<%= billing.getRoomType() %>)</td></tr>
+                    <tr><td class="details-label">Check-in</td><td class="details-value"><%= billing.getCheckIn() %></td></tr>
+                    <tr><td class="details-label">Check-out</td><td class="details-value"><%= billing.getCheckOut() %></td></tr>
+                    <tr><td class="details-label">Nights</td><td class="details-value"><%= billing.getNights() %></td></tr>
+                    <tr><td class="details-label">Rate / Night</td><td class="details-value"><%= billing.getPricePerNight() %></td></tr>
+                    <tr><td class="details-label">Total Amount</td><td class="details-value"><strong><%= billing.getTotalBill() %></strong></td></tr>
+                </table>
+            </div>
 
-        <tr><td class="label">Room</td><td><%= billing.getRoomNo() %> (<%= billing.getRoomType() %>)</td></tr>
-        <tr><td class="label">Check-in</td><td><%= billing.getCheckIn() %></td></tr>
-        <tr><td class="label">Check-out</td><td><%= billing.getCheckOut() %></td></tr>
+            <p style="margin-top:18px; text-align:center; color:#475569; font-weight:700;">Thank you!</p>
+            <% } %>
+        </div>
+    </main>
 
-        <tr><td class="label">Nights</td><td><%= billing.getNights() %></td></tr>
-        <tr><td class="label">Rate / Night</td><td><%= billing.getPricePerNight() %></td></tr>
-        <tr><td class="label">Total Amount</td><td><strong><%= billing.getTotalBill() %></strong></td></tr>
-    </table>
+    <footer class="site-footer no-print">
+        <div class="site-footer-inner">
+            Ocean View Resort Reservation System
+        </div>
+    </footer>
 
-    <p style="margin-top:14px; text-align:center;">Thank you!</p>
-
-    <% } %>
 </div>
-
 </body>
 </html>

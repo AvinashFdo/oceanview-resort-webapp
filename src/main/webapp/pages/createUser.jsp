@@ -15,120 +15,65 @@
 <html>
 <head>
     <title>Create User</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background:#f5f7fb;
-            margin:0;
-        }
-
-        .header {
-            background:#0ea5e9;
-            color:white;
-            padding:15px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
-
-        .container {
-            max-width:600px;
-            margin:30px auto;
-            background:white;
-            padding:24px;
-            border-radius:12px;
-            box-shadow:0 3px 8px rgba(0,0,0,0.08);
-        }
-
-        label {
-            display:block;
-            margin:12px 0 6px;
-            font-weight:bold;
-        }
-
-        input {
-            width:100%;
-            padding:10px;
-            border:1px solid #cbd5e1;
-            border-radius:8px;
-            box-sizing:border-box;
-        }
-
-        .btn {
-            margin-top:16px;
-            padding:10px 14px;
-            border:0;
-            border-radius:8px;
-            cursor:pointer;
-            font-weight:bold;
-            background:#0ea5e9;
-            color:white;
-        }
-
-        .msg {
-            padding:10px;
-            border-radius:8px;
-            margin-bottom:12px;
-        }
-
-        .error {
-            background:#fee2e2;
-            color:#991b1b;
-        }
-
-        .success {
-            background:#dcfce7;
-            color:#166534;
-        }
-
-        .top-links a {
-            color:white;
-            text-decoration:none;
-            font-weight:bold;
-            margin-left:12px;
-        }
-
-        .hint {
-            margin-top:8px;
-            color:#64748b;
-            font-size:13px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/styles.css">
 </head>
 <body>
+<div class="app-shell">
 
-<div class="header">
-    <div><strong>Ocean View Resort System</strong></div>
-    <div class="top-links">
-        <a href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
-        <a href="<%= request.getContextPath() %>/logout">Logout</a>
-    </div>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <div class="brand">Ocean View Resort System</div>
+            <div class="header-right">
+                <a class="header-link" href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
+                <a class="header-link" href="<%= request.getContextPath() %>/logout">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="page page-compact">
+        <div class="page-head">
+            <div>
+                <h1 class="page-title">Create Receptionist User</h1>
+                <p class="page-subtitle">Only admin users can access this page.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <% if (error != null) { %>
+            <div class="msg msg-error"><%= error %></div>
+            <% } %>
+
+            <% if (success != null) { %>
+            <div class="msg msg-success"><%= success %></div>
+            <% } %>
+
+            <form method="post" action="<%= request.getContextPath() %>/users/create">
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Enter username" required>
+                </div>
+
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter password" required>
+                </div>
+
+                <p class="small-note">Role will be created as <strong>RECEPTIONIST</strong>.</p>
+
+                <div class="actions" style="margin-top:16px;">
+                    <button class="btn btn-primary" type="submit">Create User</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            Ocean View Resort Reservation System
+        </div>
+    </footer>
+
 </div>
-
-<div class="container">
-    <h2>Create Receptionist User</h2>
-    <p>Only admin users can access this page.</p>
-
-    <% if (error != null) { %>
-    <div class="msg error"><%= error %></div>
-    <% } %>
-
-    <% if (success != null) { %>
-    <div class="msg success"><%= success %></div>
-    <% } %>
-
-    <form method="post" action="<%= request.getContextPath() %>/users/create">
-        <label>Username</label>
-        <input type="text" name="username" placeholder="Enter username" required>
-
-        <label>Password</label>
-        <input type="password" name="password" placeholder="Enter password" required>
-
-        <div class="hint">Role will be created as <strong>RECEPTIONIST</strong>.</div>
-
-        <button class="btn" type="submit">Create User</button>
-    </form>
-</div>
-
 </body>
 </html>

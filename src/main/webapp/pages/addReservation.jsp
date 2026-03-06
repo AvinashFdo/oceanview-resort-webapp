@@ -14,232 +14,169 @@
 <head>
     <title>Add Reservation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <style>
-        html, body { overflow-x: hidden; }
-        body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; }
-        .header { background:#0ea5e9; color:#fff; padding:14px 16px; }
-        .container { max-width: 760px; margin: 22px auto; background:#fff; padding: 18px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
-        .row { display:flex; gap:12px; }
-        .col { flex:1; }
-        label { display:block; margin: 10px 0 6px; font-weight:600; }
-        input, select, textarea { width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box; }
-        textarea { min-height: 70px; resize: vertical; }
-        .msg { padding:10px; border-radius:8px; margin: 10px 0; }
-        .error { background:#fee2e2; color:#991b1b; }
-        .success { background:#dcfce7; color:#166534; }
-        .actions { margin-top: 14px; display:flex; gap:10px; flex-wrap:wrap; }
-        .btn { padding:10px 14px; border:0; border-radius:8px; cursor:pointer; font-weight:700; }
-        .primary { background:#0ea5e9; color:#fff; }
-        .secondary { background:#e2e8f0; color:#0f172a; text-decoration:none; display:inline-flex; align-items:center; }
-        .booked-box {
-            margin-top: 12px;
-            padding: 12px;
-            border: 1px solid #fed7aa;
-            background: #fff7ed;
-            border-radius: 10px;
-        }
-
-        .booked-box h4 {
-            margin: 0 0 6px 0;
-            color: #9a3412;
-            font-size: 15px;
-        }
-
-        .booked-help {
-            margin: 0 0 10px 0;
-            color: #7c2d12;
-            font-size: 13px;
-        }
-
-        .booked-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .booked-item {
-            background: #ffffff;
-            border: 1px solid #fdba74;
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .booked-item-title {
-            font-size: 13px;
-            color: #9a3412;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .booked-item-dates {
-            font-size: 14px;
-            color: #431407;
-            font-weight: 600;
-        }
-
-        .booked-empty {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            color: #166534;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/css/styles.css">
 </head>
 <body>
+<div class="app-shell">
 
-<div class="header">
-    <strong>Ocean View Resort</strong> — Add Reservation
-</div>
-
-<div class="container">
-
-    <div class="actions">
-        <a class="btn secondary" href="<%= request.getContextPath() %>/dashboard">← Dashboard</a>
-    </div>
-
-    <% if (error != null) { %>
-    <div class="msg error"><%= error %></div>
-    <% } %>
-
-    <% if (success != null) { %>
-    <div class="msg success"><%= success %></div>
-    <% } %>
-
-    <% if (reservationNo != null && !reservationNo.trim().isEmpty()) { %>
-    <div class="actions" style="margin:12px 0;">
-        <a class="btn secondary"
-           href="<%= request.getContextPath() %>/payments/add?reservationNo=<%= reservationNo %>">
-            Pay Now
-        </a>
-
-        <a class="btn secondary"
-           href="<%= request.getContextPath() %>/dashboard">
-            Pay Later
-        </a>
-    </div>
-    <% } %>
-
-    <form method="post" action="<%= request.getContextPath() %>/reservations/add" onsubmit="return validateForm();">
-
-        <div class="row" style="margin-top:10px;">
-            <div class="col">
-                <label>Filter by Type</label>
-                <select id="filterType" onchange="applyFilters()">
-                    <option value="ALL">ALL</option>
-                    <option value="STANDARD">STANDARD</option>
-                    <option value="DELUXE">DELUXE</option>
-                    <option value="SUITE">SUITE</option>
-                </select>
-            </div>
-            <div class="col">
-                <label>Filter by Status</label>
-                <select id="filterStatus" onchange="applyFilters()">
-                    <option value="ALL">ALL</option>
-                    <option value="AVAILABLE">AVAILABLE</option>
-                    <option value="MAINTENANCE">MAINTENANCE</option>
-                </select>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <div class="brand">Ocean View Resort System</div>
+            <div class="header-right">
+                <a class="header-link" href="<%= request.getContextPath() %>/dashboard">Dashboard</a>
+                <a class="header-link" href="<%= request.getContextPath() %>/logout">Logout</a>
             </div>
         </div>
+    </header>
 
-        <label style="margin-top:14px;">Select a Room</label>
-
-        <div id="roomGrid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
-            <% if (rooms != null) {
-                for (Room r : rooms) {
-                    String st = r.getStatus();
-            %>
-            <div class="room-card"
-                 data-room-id="<%= r.getRoomId() %>"
-                 data-room-number="<%= r.getRoomNumber() %>"
-                 data-room-type="<%= r.getRoomType() %>"
-                 data-price="<%= r.getPricePerNight() %>"
-                 data-status="<%= st %>"
-                 onclick="selectRoom(this)"
-                 style="
-                         border:1px solid #cbd5e1;
-                         border-radius:12px;
-                         padding:12px;
-                         cursor:pointer;
-                         background:<%= "MAINTENANCE".equalsIgnoreCase(st) ? "#f8fafc" : "#ffffff" %>;
-                         opacity:<%= "MAINTENANCE".equalsIgnoreCase(st) ? "0.6" : "1" %>;
-                         ">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong>Room <%= r.getRoomNumber() %></strong>
-                    <span style="font-weight:800; font-size:12px;">
-                        <%= st %>
-                    </span>
-                </div>
-                <div style="margin-top:6px;">Type: <strong><%= r.getRoomType() %></strong></div>
-                <div style="margin-top:6px;">Price: <strong>USD <%= r.getPricePerNight() %></strong> / night</div>
-                <% if ("MAINTENANCE".equalsIgnoreCase(st)) { %>
-                <div style="margin-top:8px; color:#991b1b; font-weight:700;">Not bookable</div>
-                <% } else { %>
-                <div style="margin-top:8px; color:#166534; font-weight:700;">Click to book</div>
-                <% } %>
+    <main class="page page-wide">
+        <div class="page-head">
+            <div>
+                <h1 class="page-title">Add Reservation</h1>
+                <p class="page-subtitle">Select a room, review booked dates and create a reservation.</p>
             </div>
-            <% }} %>
-        </div>
-
-        <input type="hidden" id="roomId" name="roomId" value="">
-
-        <div id="drawerOverlay"
-             onclick="closeDrawer()"
-             style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);"></div>
-
-        <div id="drawer"
-             style="position:fixed; top:0; right:-460px; width:420px; max-width:92vw; height:100vh;
-                    background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,.15);
-                    transition:right .25s ease; padding:16px; overflow:auto;
-                    z-index:10000; visibility:hidden;">
-
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0;">Create Reservation</h3>
-                <button type="button" class="btn secondary" onclick="closeDrawer()">Close</button>
-            </div>
-
-            <div class="msg success" id="selectedRoomBox" style="display:none; margin-top:12px;"></div>
-
-            <!-- Booked dates display -->
-            <div id="bookedDatesBox" class="booked-box" style="display:none;">
-                <h4>Booked Dates</h4>
-                <p class="booked-help">These date ranges are already reserved for the selected room.</p>
-                <div id="bookedDatesContent"></div>
-            </div>
-
-            <label style="margin-top:12px;">Contact Number</label>
-            <input type="text" id="contactNo" name="contactNo" placeholder="07XXXXXXXX">
-
-            <label>Guest Name</label>
-            <input type="text" id="guestName" name="guestName" placeholder="Guest full name">
-
-            <label>Address</label>
-            <textarea id="address" name="address" placeholder="Guest address"></textarea>
-
-            <div class="row">
-                <div class="col">
-                    <label>Check-in Date</label>
-                    <input type="date" id="checkIn" name="checkIn">
-                </div>
-                <div class="col">
-                    <label>Check-out Date</label>
-                    <input type="date" id="checkOut" name="checkOut">
-                </div>
-            </div>
-
             <div class="actions">
-                <button class="btn primary" type="submit">Create Reservation</button>
+                <a class="btn btn-secondary" href="<%= request.getContextPath() %>/dashboard">← Dashboard</a>
             </div>
-
-            <p style="color:#64748b; font-size:12px; margin-top:10px;">
-                Note: Existing bookings for the selected room are shown above. The system also validates date conflicts before saving the reservation.
-            </p>
         </div>
 
-    </form>
+        <% if (error != null) { %>
+        <div class="msg msg-error"><%= error %></div>
+        <% } %>
+
+        <% if (success != null) { %>
+        <div class="msg msg-success"><%= success %></div>
+        <% } %>
+
+        <% if (reservationNo != null && !reservationNo.trim().isEmpty()) { %>
+        <div class="actions" style="margin-bottom: 16px;">
+            <a class="btn btn-primary"
+               href="<%= request.getContextPath() %>/payments/add?reservationNo=<%= reservationNo %>">
+                Pay Now
+            </a>
+
+            <a class="btn btn-secondary"
+               href="<%= request.getContextPath() %>/dashboard">
+                Pay Later
+            </a>
+        </div>
+        <% } %>
+
+        <div class="card">
+            <form method="post" action="<%= request.getContextPath() %>/reservations/add" onsubmit="return validateForm();">
+
+                <div class="form-row">
+                    <div class="field">
+                        <label>Filter by Type</label>
+                        <select id="filterType" onchange="applyFilters()">
+                            <option value="ALL">ALL</option>
+                            <option value="STANDARD">STANDARD</option>
+                            <option value="DELUXE">DELUXE</option>
+                            <option value="SUITE">SUITE</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Filter by Status</label>
+                        <select id="filterStatus" onchange="applyFilters()">
+                            <option value="ALL">ALL</option>
+                            <option value="AVAILABLE">AVAILABLE</option>
+                            <option value="MAINTENANCE">MAINTENANCE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-title">Select a Room</div>
+
+                <div id="roomGrid" class="room-grid">
+                    <% if (rooms != null) {
+                        for (Room r : rooms) {
+                            String st = r.getStatus();
+                            boolean maintenance = "MAINTENANCE".equalsIgnoreCase(st);
+                    %>
+                    <div class="room-card <%= maintenance ? "is-maintenance" : "" %>"
+                         data-room-id="<%= r.getRoomId() %>"
+                         data-room-number="<%= r.getRoomNumber() %>"
+                         data-room-type="<%= r.getRoomType() %>"
+                         data-price="<%= r.getPricePerNight() %>"
+                         data-status="<%= st %>"
+                         onclick="selectRoom(this)">
+                        <div class="room-head">
+                            <div class="room-title">Room <%= r.getRoomNumber() %></div>
+                            <span class="status-badge <%= maintenance ? "status-danger" : "status-success" %>"><%= st %></span>
+                        </div>
+                        <div class="room-meta">Type: <strong><%= r.getRoomType() %></strong></div>
+                        <div class="room-meta">Price: <strong>USD <%= r.getPricePerNight() %></strong> / night</div>
+                        <% if (maintenance) { %>
+                        <div class="room-note bad">Not bookable</div>
+                        <% } else { %>
+                        <div class="room-note ok">Click to book</div>
+                        <% } %>
+                    </div>
+                    <% }} %>
+                </div>
+
+                <input type="hidden" id="roomId" name="roomId" value="">
+
+                <div id="drawerOverlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+
+                <div id="drawer" class="drawer">
+                    <div class="drawer-header">
+                        <h3 class="drawer-title">Create Reservation</h3>
+                        <button type="button" class="btn btn-secondary" onclick="closeDrawer()">Close</button>
+                    </div>
+
+                    <div class="msg msg-success" id="selectedRoomBox" style="display:none;"></div>
+
+                    <div id="bookedDatesBox" class="booked-box" style="display:none;">
+                        <h4>Booked Dates</h4>
+                        <p class="booked-help">These date ranges are already reserved for the selected room.</p>
+                        <div id="bookedDatesContent"></div>
+                    </div>
+
+                    <div class="field">
+                        <label>Contact Number</label>
+                        <input type="text" id="contactNo" name="contactNo" placeholder="07XXXXXXXX">
+                    </div>
+
+                    <div class="field">
+                        <label>Guest Name</label>
+                        <input type="text" id="guestName" name="guestName" placeholder="Guest full name">
+                    </div>
+
+                    <div class="field">
+                        <label>Address</label>
+                        <textarea id="address" name="address" placeholder="Guest address"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field">
+                            <label>Check-in Date</label>
+                            <input type="date" id="checkIn" name="checkIn">
+                        </div>
+                        <div class="field">
+                            <label>Check-out Date</label>
+                            <input type="date" id="checkOut" name="checkOut">
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn btn-primary" type="submit">Create Reservation</button>
+                    </div>
+
+                    <p class="small-note">
+                        Existing bookings for the selected room are shown above. The system also validates date conflicts before saving the reservation.
+                    </p>
+                </div>
+
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            Ocean View Resort Reservation System
+        </div>
+    </footer>
 </div>
 
 <script>
@@ -253,7 +190,7 @@
     function closeDrawer() {
         document.getElementById("drawerOverlay").style.display = "none";
         const d = document.getElementById("drawer");
-        d.style.right = "-460px";
+        d.style.right = "-520px";
         setTimeout(() => { d.style.visibility = "hidden"; }, 260);
     }
 
@@ -267,7 +204,6 @@
         }
 
         const data = await res.json();
-        console.log("Booked ranges for drawer:", data.ranges);
         return data.ranges || [];
     }
 
@@ -291,8 +227,6 @@
 
         for (let i = 0; i < ranges.length; i++) {
             const r = ranges[i];
-
-            console.log("Booked range item:", r, "keys:", Object.keys(r));
 
             const checkIn = r.checkIn || r.check_in || "";
             const checkOut = r.checkOut || r.check_out || "";
