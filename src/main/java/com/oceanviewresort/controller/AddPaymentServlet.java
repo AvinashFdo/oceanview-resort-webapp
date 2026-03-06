@@ -32,24 +32,39 @@ public class AddPaymentServlet extends HttpServlet {
             return;
         }
 
-        // Optional: if reservationNo is passed as query param, pre-load billing summary
         String reservationNo = req.getParameter("reservationNo");
-        if (reservationNo != null && !reservationNo.trim().isEmpty()) {
-            reservationNo = reservationNo.trim().toUpperCase();
+
+        // CASE 1: No reservation selected → show pending payment list
+        if (reservationNo == null || reservationNo.trim().isEmpty()) {
 
             try {
-                ReservationDetails billing = reservationDAO.findBillingDetailsByReservationNo(reservationNo);
-                if (billing != null) {
-                    req.setAttribute("billing", billing);
-                    req.setAttribute("reservationNo", reservationNo);
-                } else {
-                    req.setAttribute("error", "Reservation not found: " + reservationNo);
-                    req.setAttribute("reservationNo", reservationNo);
-                }
+                req.setAttribute("pendingList", reservationDAO.listPendingPaymentReservations());
             } catch (Exception ex) {
                 req.setAttribute("error", "ERROR: " + ex.getMessage());
+            }
+
+            req.getRequestDispatcher("/pages/addPayment.jsp").forward(req, resp);
+            return;
+        }
+
+        // CASE 2: Reservation selected → load billing details
+        reservationNo = reservationNo.trim().toUpperCase();
+
+        try {
+
+            ReservationDetails billing = reservationDAO.findBillingDetailsByReservationNo(reservationNo);
+
+            if (billing != null) {
+                req.setAttribute("billing", billing);
+                req.setAttribute("reservationNo", reservationNo);
+            } else {
+                req.setAttribute("error", "Reservation not found: " + reservationNo);
                 req.setAttribute("reservationNo", reservationNo);
             }
+
+        } catch (Exception ex) {
+            req.setAttribute("error", "ERROR: " + ex.getMessage());
+            req.setAttribute("reservationNo", reservationNo);
         }
 
         req.getRequestDispatcher("/pages/addPayment.jsp").forward(req, resp);

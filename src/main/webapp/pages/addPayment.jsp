@@ -1,5 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.oceanviewresort.model.ReservationDetails" %>
+<%@ page import="com.oceanviewresort.model.ReservationSummary" %>
+<%@ page import="java.util.List" %>
+
 <%
   String username = (String) session.getAttribute("username");
   if (username == null) {
@@ -11,8 +14,12 @@
   String reservationNo = (String) request.getAttribute("reservationNo");
   ReservationDetails billing = (ReservationDetails) request.getAttribute("billing");
 
+  // NEW: pending list (set by servlet when no reservationNo is provided)
+  List<ReservationSummary> pendingList = (List<ReservationSummary>) request.getAttribute("pendingList");
+
   if (reservationNo == null) reservationNo = "";
 %>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,17 +27,18 @@
   <style>
     body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; }
     .header { background:#0ea5e9; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; }
-    .container { padding:30px; max-width: 900px; margin: 0 auto; }
-    .card { background:white; padding:16px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.08); }
+    .container { padding:30px; max-width: 1000px; margin: 0 auto; }
+    .card { background:white; padding:16px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
     .row { margin: 10px 0; }
     .input { padding: 8px; width: 220px; }
-    .btn { padding: 8px 12px; cursor: pointer; }
+    .btn { padding: 8px 12px; cursor: pointer; border:1px solid #cbd5e1; border-radius:6px; background:#fff; }
     .error { background:#ffe5e5; padding:10px; border:1px solid #ffb3b3; margin-bottom:12px; border-radius:6px; }
     table { width:100%; border-collapse:collapse; margin-top:12px; }
-    td { padding:8px; border-bottom:1px solid #eee; }
+    th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; }
+    th { background:#f8fafc; }
     .label { font-weight:bold; width:35%; }
-    .top-actions { margin-bottom: 12px; }
-    a { color:#0ea5e9; text-decoration:none; }
+    a { color:#0ea5e9; text-decoration:none; font-weight:700; }
+    .muted { color:#64748b; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -45,24 +53,56 @@
 </div>
 
 <div class="container">
-  <h2>Add Payment</h2>
+  <h2>Add Payment / Print Bill</h2>
 
   <% if (error != null) { %>
   <div class="error"><%= error %></div>
   <% } %>
 
+  <% if (billing == null) { %>
+  <!-- Pending Payments List -->
   <div class="card">
-    <!-- Search / Load billing summary -->
-    <form method="get" action="<%= request.getContextPath() %>/payments/add">
-      <div class="row">
-        <label>Reservation No:</label>
-        <input class="input" type="text" name="reservationNo" value="<%= reservationNo %>" placeholder="R0005" required />
-        <button class="btn" type="submit">Load</button>
-      </div>
-    </form>
+    <h3>Pending Payments</h3>
+    <p class="muted">Select a reservation below to proceed with payment.</p>
 
-    <% if (billing != null) { %>
+    <table>
+      <thead>
+      <tr>
+        <th>Reservation No</th>
+        <th>Guest</th>
+        <th>Room</th>
+        <th>Check-in</th>
+        <th>Check-out</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% if (pendingList == null || pendingList.isEmpty()) { %>
+      <tr>
+        <td colspan="6">No pending payments found.</td>
+      </tr>
+      <% } else {
+        for (ReservationSummary r : pendingList) { %>
+      <tr>
+        <td><%= r.getReservationNo() %></td>
+        <td><%= r.getGuestName() %></td>
+        <td><%= r.getRoomNumber() %> (<%= r.getRoomType() %>)</td>
+        <td><%= r.getCheckIn() %></td>
+        <td><%= r.getCheckOut() %></td>
+        <td>
+          <a class="btn" href="<%= request.getContextPath() %>/payments/add?reservationNo=<%= r.getReservationNo() %>">Select</a>
+        </td>
+      </tr>
+      <% } } %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
 
+  <!-- Billing Summary + Confirm Payment (only when billing is loaded) -->
+  <% if (billing != null) { %>
+  <div class="card" >
+    <a class="btn" href="<%= request.getContextPath() %>/payments/add">← Back to Pending Payments</a>
     <h3>Billing Summary</h3>
     <table>
       <tr><td class="label">Reservation No</td><td><%= billing.getReservationNo() %></td></tr>
@@ -92,9 +132,9 @@
         <button class="btn" type="submit">Save Payment</button>
       </div>
     </form>
-
-    <% } %>
   </div>
+  <% } %>
+
 </div>
 
 </body>

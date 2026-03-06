@@ -197,4 +197,69 @@ public class ReservationDAO {
             return ps.executeUpdate() == 1;
         }
     }
+
+    public List<ReservationSummary> listPendingPaymentReservations() throws Exception {
+
+        String sql =
+                "SELECT " +
+                        "  r.reservation_no, r.guest_name, r.check_in, r.check_out, " +
+                        "  rm.room_number, rm.room_type, " +
+                        "  r.status AS reservation_status, " +
+                        "  'PENDING' AS payment_status " +
+                        "FROM reservations r " +
+                        "JOIN rooms rm ON r.room_id = rm.room_id " +
+                        "LEFT JOIN payments p ON p.res_id = r.res_id " +
+                        "WHERE p.payment_id IS NULL AND r.status = 'ACTIVE' " +
+                        "ORDER BY r.created_at DESC";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            List<ReservationSummary> list = new ArrayList<>();
+
+            while (rs.next()) {
+                ReservationSummary s = new ReservationSummary();
+                s.setReservationNo(rs.getString("reservation_no"));
+                s.setGuestName(rs.getString("guest_name"));
+                s.setCheckIn(rs.getDate("check_in"));
+                s.setCheckOut(rs.getDate("check_out"));
+                s.setRoomNumber(rs.getString("room_number"));
+                s.setRoomType(rs.getString("room_type"));
+                s.setReservationStatus(rs.getString("reservation_status"));
+                s.setPaymentStatus(rs.getString("payment_status"));
+                list.add(s);
+            }
+
+            return list;
+        }
+    }
+
+    public List<String[]> getBookedDateRangesForRoom(int roomId) throws Exception {
+
+        String sql =
+                "SELECT check_in, check_out " +
+                        "FROM reservations " +
+                        "WHERE room_id = ? AND status = 'ACTIVE' " +
+                        "ORDER BY check_in";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, roomId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                List<String[]> list = new ArrayList<>();
+                while (rs.next()) {
+                    // send as ISO strings yyyy-mm-dd
+                    list.add(new String[] {
+                            rs.getDate("check_in").toString(),
+                            rs.getDate("check_out").toString()
+                    });
+                }
+                return list;
+            }
+        }
+    }
 }

@@ -16,6 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
+        html, body { overflow-x: hidden; }
         body { font-family: Arial, sans-serif; background:#f5f7fb; margin:0; }
         .header { background:#0ea5e9; color:#fff; padding:14px 16px; }
         .container { max-width: 760px; margin: 22px auto; background:#fff; padding: 18px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
@@ -27,10 +28,36 @@
         .msg { padding:10px; border-radius:8px; margin: 10px 0; }
         .error { background:#fee2e2; color:#991b1b; }
         .success { background:#dcfce7; color:#166534; }
-        .actions { margin-top: 14px; display:flex; gap:10px; }
+        .actions { margin-top: 14px; display:flex; gap:10px; flex-wrap:wrap; }
         .btn { padding:10px 14px; border:0; border-radius:8px; cursor:pointer; font-weight:700; }
         .primary { background:#0ea5e9; color:#fff; }
         .secondary { background:#e2e8f0; color:#0f172a; text-decoration:none; display:inline-flex; align-items:center; }
+        .booked-box {
+            margin-top:12px;
+            padding:10px;
+            border:1px solid #fcd34d;
+            background:#fffbeb;
+            border-radius:8px;
+        }
+        .booked-box h4 {
+            margin:0 0 8px 0;
+            color:#92400e;
+            font-size:14px;
+        }
+        .booked-box ul {
+            margin:0;
+            padding-left:18px;
+        }
+        .booked-box li {
+            margin:4px 0;
+            color:#78350f;
+            font-size:14px;
+        }
+        .booked-empty {
+            color:#166534;
+            font-size:14px;
+            font-weight:600;
+        }
     </style>
 </head>
 <body>
@@ -54,17 +81,21 @@
     <% } %>
 
     <% if (reservationNo != null && !reservationNo.trim().isEmpty()) { %>
-    <div class="actions">
+    <div class="actions" style="margin:12px 0;">
         <a class="btn secondary"
            href="<%= request.getContextPath() %>/payments/add?reservationNo=<%= reservationNo %>">
             Pay Now
+        </a>
+
+        <a class="btn secondary"
+           href="<%= request.getContextPath() %>/dashboard">
+            Pay Later
         </a>
     </div>
     <% } %>
 
     <form method="post" action="<%= request.getContextPath() %>/reservations/add" onsubmit="return validateForm();">
 
-        <!-- Filters -->
         <div class="row" style="margin-top:10px;">
             <div class="col">
                 <label>Filter by Type</label>
@@ -87,7 +118,6 @@
 
         <label style="margin-top:14px;">Select a Room</label>
 
-        <!-- Room Cards -->
         <div id="roomGrid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px;">
             <% if (rooms != null) {
                 for (Room r : rooms) {
@@ -111,8 +141,8 @@
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <strong>Room <%= r.getRoomNumber() %></strong>
                     <span style="font-weight:800; font-size:12px;">
-                    <%= st %>
-                </span>
+                        <%= st %>
+                    </span>
                 </div>
                 <div style="margin-top:6px;">Type: <strong><%= r.getRoomType() %></strong></div>
                 <div style="margin-top:6px;">Price: <strong>USD <%= r.getPricePerNight() %></strong> / night</div>
@@ -125,18 +155,17 @@
             <% }} %>
         </div>
 
-        <!-- Hidden selected roomId (this replaces the <select>) -->
         <input type="hidden" id="roomId" name="roomId" value="">
 
-        <!-- Side Drawer -->
         <div id="drawerOverlay"
              onclick="closeDrawer()"
              style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35);"></div>
 
         <div id="drawer"
-             style="position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100vh;
-                background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,.15);
-                transition:right .25s ease; padding:16px; overflow:auto; z-index:9999;">
+             style="position:fixed; top:0; right:-460px; width:420px; max-width:92vw; height:100vh;
+                    background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,.15);
+                    transition:right .25s ease; padding:16px; overflow:auto;
+                    z-index:10000; visibility:hidden;">
 
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="margin:0;">Create Reservation</h3>
@@ -144,6 +173,12 @@
             </div>
 
             <div class="msg success" id="selectedRoomBox" style="display:none; margin-top:12px;"></div>
+
+            <!-- Booked dates display -->
+            <div id="bookedDatesBox" class="booked-box" style="display:none;">
+                <h4>Already booked dates for this room</h4>
+                <div id="bookedDatesContent"></div>
+            </div>
 
             <label style="margin-top:12px;">Contact Number</label>
             <input type="text" id="contactNo" name="contactNo" placeholder="07XXXXXXXX">
@@ -170,27 +205,64 @@
             </div>
 
             <p style="color:#64748b; font-size:12px; margin-top:10px;">
-                Note: Date availability is validated by the system. If a room is already reserved for selected dates, you’ll get a conflict message.
+                Note: Existing bookings for the selected room are shown above. The system also validates date conflicts before saving the reservation.
             </p>
         </div>
 
     </form>
-
 </div>
 
 <script>
-
     function openDrawer() {
         document.getElementById("drawerOverlay").style.display = "block";
-        document.getElementById("drawer").style.right = "0";
+        const d = document.getElementById("drawer");
+        d.style.visibility = "visible";
+        d.style.right = "0";
     }
 
     function closeDrawer() {
         document.getElementById("drawerOverlay").style.display = "none";
-        document.getElementById("drawer").style.right = "-420px";
+        const d = document.getElementById("drawer");
+        d.style.right = "-460px";
+        setTimeout(() => { d.style.visibility = "hidden"; }, 260);
     }
 
-    function selectRoom(card) {
+    async function loadBookedDateRanges(roomId) {
+        const url = "<%= request.getContextPath() %>/rooms/booked-dates?roomId=" + encodeURIComponent(roomId);
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            console.warn("Booked dates fetch failed:", res.status);
+            return [];
+        }
+
+        const data = await res.json();
+        return data.ranges || [];
+    }
+
+    function renderBookedDates(ranges) {
+        const box = document.getElementById("bookedDatesBox");
+        const content = document.getElementById("bookedDatesContent");
+
+        box.style.display = "block";
+
+        if (!ranges || ranges.length === 0) {
+            content.innerHTML = '<div class="booked-empty">No existing bookings for this room.</div>';
+            return;
+        }
+
+        let html = "<ul>";
+        ranges.forEach(r => {
+            const checkIn = (r.checkIn || r.check_in || "").toString().trim();
+            const checkOut = (r.checkOut || r.check_out || "").toString().trim();
+            html += "<li><strong>" + checkIn + "</strong> to <strong>" + checkOut + "</strong></li>";
+        });
+        html += "</ul>";
+
+        content.innerHTML = html;
+    }
+
+    async function selectRoom(card) {
         const status = (card.dataset.status || "").toUpperCase();
         if (status === "MAINTENANCE") {
             alert("This room is under maintenance and cannot be booked.");
@@ -207,6 +279,17 @@
         const box = document.getElementById("selectedRoomBox");
         box.style.display = "block";
         box.innerHTML = "Selected: <strong>Room " + roomNumber + "</strong> (" + roomType + ") — USD " + price + " / night";
+
+        document.getElementById("checkIn").value = "";
+        document.getElementById("checkOut").value = "";
+
+        try {
+            const ranges = await loadBookedDateRanges(roomId);
+            renderBookedDates(ranges);
+        } catch (e) {
+            console.warn("Could not load booked dates", e);
+            renderBookedDates([]);
+        }
 
         openDrawer();
     }
@@ -231,13 +314,13 @@
         const addr = document.getElementById("address").value.trim();
         const contact = document.getElementById("contactNo").value.trim();
         const roomId = document.getElementById("roomId").value;
+        const inDate = document.getElementById("checkIn").value;
+        const outDate = document.getElementById("checkOut").value;
+
         if (roomId === "") {
             alert("Please select a room.");
             return false;
         }
-        const inDate = document.getElementById("checkIn").value;
-        const outDate = document.getElementById("checkOut").value;
-
         if (guest.length === 0) {
             alert("Please enter guest name.");
             return false;
@@ -250,10 +333,6 @@
             alert("Contact number must contain 9 to 12 digits only.");
             return false;
         }
-        if (roomId === "") {
-            alert("Please select a room.");
-            return false;
-        }
         if (!inDate || !outDate) {
             alert("Please select check-in and check-out dates.");
             return false;
@@ -262,10 +341,21 @@
             alert("Check-out date must be after check-in date.");
             return false;
         }
+
         return true;
     }
 
+    window.addEventListener("load", () => {
+        const reservationNo = "<%= (reservationNo == null ? "" : reservationNo) %>";
+        if (reservationNo && reservationNo.trim().length > 0) {
+            closeDrawer();
+            window.scrollTo(0, 0);
+        }
+    });
 
+    window.selectRoom = selectRoom;
+    window.applyFilters = applyFilters;
+    window.validateForm = validateForm;
 </script>
 
 </body>
