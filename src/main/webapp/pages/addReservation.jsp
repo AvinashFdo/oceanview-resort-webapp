@@ -33,30 +33,59 @@
         .primary { background:#0ea5e9; color:#fff; }
         .secondary { background:#e2e8f0; color:#0f172a; text-decoration:none; display:inline-flex; align-items:center; }
         .booked-box {
-            margin-top:12px;
-            padding:10px;
-            border:1px solid #fcd34d;
-            background:#fffbeb;
-            border-radius:8px;
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            border-radius: 10px;
         }
+
         .booked-box h4 {
-            margin:0 0 8px 0;
-            color:#92400e;
-            font-size:14px;
+            margin: 0 0 6px 0;
+            color: #9a3412;
+            font-size: 15px;
         }
-        .booked-box ul {
-            margin:0;
-            padding-left:18px;
+
+        .booked-help {
+            margin: 0 0 10px 0;
+            color: #7c2d12;
+            font-size: 13px;
         }
-        .booked-box li {
-            margin:4px 0;
-            color:#78350f;
-            font-size:14px;
+
+        .booked-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
+
+        .booked-item {
+            background: #ffffff;
+            border: 1px solid #fdba74;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .booked-item-title {
+            font-size: 13px;
+            color: #9a3412;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .booked-item-dates {
+            font-size: 14px;
+            color: #431407;
+            font-weight: 600;
+        }
+
         .booked-empty {
-            color:#166534;
-            font-size:14px;
-            font-weight:600;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -176,7 +205,8 @@
 
             <!-- Booked dates display -->
             <div id="bookedDatesBox" class="booked-box" style="display:none;">
-                <h4>Already booked dates for this room</h4>
+                <h4>Booked Dates</h4>
+                <p class="booked-help">These date ranges are already reserved for the selected room.</p>
                 <div id="bookedDatesContent"></div>
             </div>
 
@@ -237,6 +267,7 @@
         }
 
         const data = await res.json();
+        console.log("Booked ranges for drawer:", data.ranges);
         return data.ranges || [];
     }
 
@@ -245,21 +276,44 @@
         const content = document.getElementById("bookedDatesContent");
 
         box.style.display = "block";
+        content.innerHTML = "";
 
         if (!ranges || ranges.length === 0) {
-            content.innerHTML = '<div class="booked-empty">No existing bookings for this room.</div>';
+            const empty = document.createElement("div");
+            empty.className = "booked-empty";
+            empty.textContent = "No existing bookings for this room.";
+            content.appendChild(empty);
             return;
         }
 
-        let html = "<ul>";
-        ranges.forEach(r => {
-            const checkIn = (r.checkIn || r.check_in || "").toString().trim();
-            const checkOut = (r.checkOut || r.check_out || "").toString().trim();
-            html += "<li><strong>" + checkIn + "</strong> to <strong>" + checkOut + "</strong></li>";
-        });
-        html += "</ul>";
+        const list = document.createElement("div");
+        list.className = "booked-list";
 
-        content.innerHTML = html;
+        for (let i = 0; i < ranges.length; i++) {
+            const r = ranges[i];
+
+            console.log("Booked range item:", r, "keys:", Object.keys(r));
+
+            const checkIn = r.checkIn || r.check_in || "";
+            const checkOut = r.checkOut || r.check_out || "";
+
+            const item = document.createElement("div");
+            item.className = "booked-item";
+
+            const title = document.createElement("div");
+            title.className = "booked-item-title";
+            title.textContent = "Booking " + (i + 1);
+
+            const dates = document.createElement("div");
+            dates.className = "booked-item-dates";
+            dates.textContent = checkIn + " → " + checkOut;
+
+            item.appendChild(title);
+            item.appendChild(dates);
+            list.appendChild(item);
+        }
+
+        content.appendChild(list);
     }
 
     async function selectRoom(card) {

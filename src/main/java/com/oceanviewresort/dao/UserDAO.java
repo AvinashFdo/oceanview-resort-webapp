@@ -38,4 +38,25 @@ public class UserDAO {
 
         return null;
     }
+
+    public boolean createUser(User user) {
+
+        String sql = "INSERT INTO users (username, password_hash, role, is_active) VALUES (?, ?, ?, ?)";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPasswordHash());
+            ps.setString(3, user.getRole());
+            ps.setBoolean(4, user.isActive());
+
+            return ps.executeUpdate() == 1;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }
